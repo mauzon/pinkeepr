@@ -1,0 +1,4 @@
+# Copy to .dev.vars for local wrangler dev (gitignored). Never commit real secrets.
+ACCESS_BYPASS_DEV=1
+# Optional — wrangler.d1.jsonc vars already set ACCESS_AUD when using repo example
+# AGENT_TOKENS={"local-agent":"sha256-hex-of-bearer-token"}

@@ -1,0 +1,48 @@
+{
+  // D1 + API mode: copy to wrangler.d1.jsonc, set database_id after `wrangler d1 create pinkeepr-places`.
+  // Keep wrangler.jsonc assets-only for static/json deploys.
+  "name": "pinkeepr",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-11-13",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api", "/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "pinkeepr-places",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "your-team.cloudflareaccess.com",
+    "ACCESS_AUD": "0000000000000000000000000000000000000000000000000000000000000000",
+    "ACCESS_BYPASS_DEV": "false",
+    "WRITE_EMAILS": "owner@example.com",
+    "AGENT_TOKEN_HASHES": "{\"demo\":\"0000000000000000000000000000000000000000000000000000000000000000\"}"
+  },
+  "previews": {
+    "vars": {
+      "ACCESS_TEAM_DOMAIN": "your-team.cloudflareaccess.com",
+      "ACCESS_AUD": "0000000000000000000000000000000000000000000000000000000000000000",
+      "ACCESS_BYPASS_DEV": "false",
+      "WRITE_EMAILS": "owner@example.com",
+      "AGENT_TOKEN_HASHES": "{\"demo\":\"0000000000000000000000000000000000000000000000000000000000000000\"}"
+    },
+    "d1_databases": [
+      {
+        "binding": "DB",
+        "database_name": "pinkeepr-places",
+        "database_id": "00000000-0000-0000-0000-000000000000"
+      }
+    ]
+  }
+}

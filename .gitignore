@@ -6,6 +6,8 @@ data/cache/list-extract.json
 data/sync-report.json
 data/raw/
 .wrangler/
+.tmp/
+migrations/seed/
 /tmp/
 .DS_Store
 src/city-data.json

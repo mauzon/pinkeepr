@@ -16,6 +16,28 @@ import { copyCityJsonToDist, writeServiceWorker } from "./scripts/lib/generate-s
 const root = path.dirname(fileURLToPath(import.meta.url));
 const distDir = path.join(root, "dist");
 const config = JSON.parse(fs.readFileSync(path.join(root, "config.json"), "utf8"));
+
+function ciBranchName() {
+  const raw =
+    process.env.WORKERS_CI_BRANCH ||
+    process.env.CF_PAGES_BRANCH ||
+    process.env.GITHUB_HEAD_REF ||
+    process.env.GITHUB_REF_NAME ||
+    "";
+  return raw.replace(/^refs\/heads\//, "").trim();
+}
+
+/** @returns {"json"|"d1"} */
+function resolveStorageMode(cfg = config) {
+  const branch = ciBranchName();
+  const onCi = Boolean(process.env.WORKERS_CI || process.env.CI);
+  const previewBranch = onCi && branch && branch !== "main";
+  if (process.env.STORAGE === "d1" || process.env.DATA_SOURCE === "api") return "d1";
+  if (previewBranch) return "d1";
+  if (cfg.storage === "d1" || cfg.dataSource === "api") return "d1";
+  return "json";
+}
+
 const tmpJs = "/tmp/travel-app.js";
 const defaultLang = config.defaultLang === "ru" ? "ru" : DEFAULT_LANG;
 const publicDir = path.join(root, "public");
@@ -29,8 +51,8 @@ function copyPublicAssets() {
 }
 
 function finalizeDist() {
-  copyCityJsonToDist(root, distDir, config);
-  writeServiceWorker(distDir);
+  const cityUrls = copyCityJsonToDist(root, distDir, config);
+  writeServiceWorker(distDir, cityUrls);
   fs.writeFileSync(path.join(distDir, "_headers"), netlifyHeadersBlock());
   console.log("wrote dist/_headers (Cloudflare / Netlify)");
 }
@@ -65,6 +87,7 @@ async function buildCityHtml(slug, outRelDir, locale) {
   fs.writeFileSync(path.join(root, "src/city-data.json"), JSON.stringify(cityData));
   const siteConfig = {
     ...config,
+    storage: resolveStorageMode(config),
     cities: config.cities.map((c) => {
       const data = JSON.parse(fs.readFileSync(path.join(root, "data/cities", `${c.slug}.json`), "utf8"));
       return {
@@ -283,6 +306,9 @@ fs.mkdirSync(distDir, { recursive: true });
 copyPublicAssets();
 
 if (!config.cities?.length || !config.defaultCity) {
+  console.log(
+    `build storage=${resolveStorageMode(config)} branch=${ciBranchName() || "(local)"} WORKERS_CI=${process.env.WORKERS_CI ?? ""}`,
+  );
   writeEmptyLanding("en", ".");
   writeEmptyLanding("ru", "ru");
   write404("en", distDir);
@@ -296,6 +322,10 @@ if (!config.cities?.length || !config.defaultCity) {
   console.log("empty site: dist/index.html (no cities configured)");
   process.exit(0);
 }
+
+console.log(
+  `build storage=${resolveStorageMode(config)} branch=${ciBranchName() || "(local)"} WORKERS_CI=${process.env.WORKERS_CI ?? ""}`,
+);
 
 for (const city of config.cities) {
   const enDir = city.slug === config.defaultCity ? "." : city.slug;

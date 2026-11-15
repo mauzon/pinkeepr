@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type CSSProperties,
@@ -16,7 +17,7 @@ import {
 
 export { hasExplicitColorScheme };
 
-export { useEffect, useMemo, useState };
+export { useEffect, useLayoutEffect, useMemo, useState };
 export type { CSSProperties };
 
 let themeListeners = new Set<(t: GrokTheme) => void>();

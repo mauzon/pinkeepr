@@ -1,0 +1,1 @@
+ALTER TABLE places ADD COLUMN extras_json TEXT;

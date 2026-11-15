@@ -39,7 +39,8 @@ export async function verifyAccessJwt(request: Request, env: Env): Promise<{ ok:
   }
   const token = accessJwtTokenFromRequest(request);
   if (!token) return { ok: false };
-  const team = env.ACCESS_TEAM_DOMAIN || "mzn1.cloudflareaccess.com";
+  const team = env.ACCESS_TEAM_DOMAIN?.trim();
+  if (!team) return { ok: false };
   const allowedAud = parseAudList(accessAudiences(env));
   if (!allowedAud.length) return { ok: false };
   try {

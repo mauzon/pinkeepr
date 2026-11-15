@@ -23,7 +23,8 @@
     }
   ],
   "vars": {
-    "ACCESS_TEAM_DOMAIN": "your-team.cloudflareaccess.com",
+    // Host only (no https). Leave empty or delete to disable Access JWT checks (agent tokens only).
+    "ACCESS_TEAM_DOMAIN": "<your-team>.cloudflareaccess.com",
     "ACCESS_AUD": "0000000000000000000000000000000000000000000000000000000000000000",
     "ACCESS_BYPASS_DEV": "false",
     "WRITE_EMAILS": "owner@example.com",
@@ -31,7 +32,8 @@
   },
   "previews": {
     "vars": {
-      "ACCESS_TEAM_DOMAIN": "your-team.cloudflareaccess.com",
+      // Host only (no https). Leave empty or delete to disable Access JWT checks (agent tokens only).
+      "ACCESS_TEAM_DOMAIN": "<your-team>.cloudflareaccess.com",
       "ACCESS_AUD": "0000000000000000000000000000000000000000000000000000000000000000",
       "ACCESS_BYPASS_DEV": "false",
       "WRITE_EMAILS": "owner@example.com",

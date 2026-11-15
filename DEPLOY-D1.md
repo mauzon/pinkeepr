@@ -40,8 +40,8 @@ Migrations **0001–0003** live in `migrations/`. Binding name: **`DB`**.
 
 | Var | Purpose |
 |-----|---------|
-| `ACCESS_TEAM_DOMAIN` | Your Cloudflare Access team domain |
-| `ACCESS_AUD` | Access application AUD (comma-separated if multiple) |
+| `ACCESS_TEAM_DOMAIN` | Cloudflare Access team host, e.g. `<your-team>.cloudflareaccess.com` (from Zero Trust → Settings). **If unset or empty, Access JWT verification is off** — reads/writes use agent Bearer tokens only (`AGENT_TOKEN_HASHES`). |
+| `ACCESS_AUD` | Access application AUD (comma-separated if multiple). Required only when `ACCESS_TEAM_DOMAIN` is set. |
 | `ACCESS_BYPASS_DEV` | `true` locally only (`.dev.vars`) |
 | `WRITE_EMAILS` | Allowlisted emails for JWT writes |
 | `AGENT_TOKEN_HASHES` | JSON `{"agent-name":"<sha256-hex>"}` |

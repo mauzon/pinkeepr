@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { verifyAccessJwt } from "../worker/auth/access.ts";
 import { agentTokenHashMap, constantTimeEqualHex, matchAgentBearerToken } from "../worker/auth/agent-tokens.ts";
 
 const good = "correct-agent-token-value";
@@ -32,6 +33,16 @@ const wrong = "wrong-token";
     AGENT_TOKENS: JSON.stringify({ a: "0000000000000000000000000000000000000000000000000000000000000000" }),
   };
   assert.equal(agentTokenHashMap(env).a, "0000000000000000000000000000000000000000000000000000000000000000");
+}
+
+{
+  const req = new Request("http://x/", {
+    headers: { "Cf-Access-Jwt-Assertion": "eyJhbGciOiJIUzI1NiJ9.e30.sig" },
+  });
+  const off = await verifyAccessJwt(req, { ACCESS_AUD: "aud" });
+  assert.equal(off.ok, false);
+  const blank = await verifyAccessJwt(req, { ACCESS_TEAM_DOMAIN: "  ", ACCESS_AUD: "aud" });
+  assert.equal(blank.ok, false);
 }
 
 console.log("✓ agent-auth tests");

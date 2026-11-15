@@ -94,7 +94,7 @@ Full deploy: **[DEPLOY-D1.md](DEPLOY-D1.md)**.
 3. Commit only the SHA-256 hash in `AGENT_TOKEN_HASHES` inside `wrangler.d1.jsonc`.
 4. Use `Authorization: Bearer <token>` on API reads and writes.
 
-Owner may also write via **Cloudflare Access JWT** if their email is in `WRITE_EMAILS`. The owner should configure Access **Bypass** for `/api/*` on browser deployments so fetch is not redirected; the Worker enforces auth. See DEPLOY-D1.md.
+Owner may also write via **Cloudflare Access JWT** when `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` are set in `wrangler.d1.jsonc` and their email is in `WRITE_EMAILS`. Without a team domain, JWT auth is disabled and only agent tokens apply. The owner should configure Access **Bypass** for `/api/*` on browser deployments so fetch is not redirected; the Worker enforces auth. See DEPLOY-D1.md.
 
 Forks may set `API_PUBLIC_READS=true` for anonymous GETs; default is authenticated reads.
 

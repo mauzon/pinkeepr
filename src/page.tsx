@@ -14,6 +14,7 @@ import {
   useState,
   useMemo,
   useEffect,
+  useLayoutEffect,
   useGrokTheme,
 } from "./ui";
 import { MapsActions, HotelMapsActions, ShareToast } from "./share";
@@ -57,6 +58,7 @@ import {
 import { CategoryPill, CategoryChips, categorySlug } from "./CategoryUi";
 import { resolveHotelMapsUrl, resolveOriginMapsUrl, resolvePlaceMapsUrl } from "./maps-link";
 import { registerServiceWorkerHandlers } from "./pwa-client";
+import { readLocalCityBundle, revalidateCityBundle } from "./city-loader";
 
 type DisplayPlace = {
   s: "u" | "a" | "e";
@@ -78,21 +80,21 @@ type DisplayPlace = {
   when?: string;
 };
 
-const data = cityData as CityData;
+const bundledData = cityData as CityData;
 
 function catLabel(c: string, t: Messages): string {
   const cats = t.categories as Record<string, string>;
   return cats[c] ?? c;
 }
 
-function toDisplay(p: PlaceRow, locale: Locale): DisplayPlace {
+function toDisplay(p: PlaceRow, locale: Locale, cityLabel: string): DisplayPlace {
   const s = p.source === "added" ? "a" : p.source === "event" ? "e" : "u";
   return {
     s,
     n: placeName(p, locale),
     c: p.category,
     a: placeDistrict(p, locale) || "",
-    maps: resolvePlaceMapsUrl(p, data.name_en || data.name_ru),
+    maps: resolvePlaceMapsUrl(p, cityLabel),
     walk: walkLabel(p, locale),
     taxi: taxiLabel(p, locale),
     pub: transitDescription(p, locale),
@@ -302,7 +304,35 @@ export default function TravelCityPage() {
   const meta = buildMeta as { locale: Locale; currentSlug: string; defaultCity: string };
   const locale = meta.locale === "en" ? "en" : "ru";
   const t = messages[locale];
-  const cfg = siteConfig as { siteTitle: string; siteTitle_en?: string; defaultCity: string };
+  const cfg = siteConfig as {
+    siteTitle: string;
+    siteTitle_en?: string;
+    defaultCity: string;
+    storage?: "json" | "d1";
+    dataSource?: "static" | "api";
+  };
+  const storage =
+    cfg.storage === "d1" || cfg.dataSource === "api" ? "d1" : "json";
+  const [data, setData] = useState<CityData>(bundledData);
+
+  useLayoutEffect(() => {
+    if (storage !== "d1") {
+      setData(bundledData);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const local = await readLocalCityBundle(meta.currentSlug, bundledData);
+      if (!cancelled) setData(local);
+      const fresh = await revalidateCityBundle(meta.currentSlug, local);
+      if (!cancelled && fresh) setData(fresh);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [storage, meta.currentSlug, bundledData]);
+
+  const cityLabel = data.name_en || data.name_ru;
 
   const [shareToast, setShareToast] = useState(false);
   const [offlineBanner, setOfflineBanner] = useState(false);
@@ -363,8 +393,8 @@ export default function TravelCityPage() {
 
   const rawPlaces = useMemo(() => [...data.places, ...data.events], [data]);
   const places = useMemo(
-    () => rawPlaces.map((p) => toDisplay(placeWithOrigin(p, originId), locale)),
-    [rawPlaces, locale, originId],
+    () => rawPlaces.map((p) => toDisplay(placeWithOrigin(p, originId), locale, cityLabel)),
+    [rawPlaces, locale, originId, cityLabel],
   );
   const catOrder = t.catOrder;
 
@@ -527,7 +557,7 @@ export default function TravelCityPage() {
                       label: t.hotel.map,
                       value: (
                         <HotelMapsActions
-                          mapsUrl={resolveHotelMapsUrl(hotel, data.name_en || data.name_ru)}
+                          mapsUrl={resolveHotelMapsUrl(hotel, cityLabel)}
                           name={hotel.name}
                           categoryLabel={t.hotel.categoryShare}
                           shareLabel={t.share.label}
@@ -547,7 +577,7 @@ export default function TravelCityPage() {
                             label: t.hotel.map,
                             value: (
                               <a
-                                href={resolveOriginMapsUrl(o, data.name_en || data.name_ru)}
+                                href={resolveOriginMapsUrl(o, cityLabel)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >

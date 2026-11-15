@@ -20,6 +20,10 @@ function isDataJson(url) {
   return url.pathname.endsWith(".json") || url.pathname.startsWith("/data/");
 }
 
+function isApiRead(url, request) {
+  return request.method === "GET" && url.pathname.startsWith("/api/");
+}
+
 function isCacheFirstPath(url) {
   if (url.pathname === "/sw.js") return true;
   if (url.pathname === "/site.webmanifest") return true;
@@ -80,6 +84,30 @@ async function networkFirst(request) {
   return new Response("Offline", { status: 503, statusText: "Offline" });
 }
 
+/** API reads: always hit the Worker; never serve stale travel-places cache. Offline → pinkeepr-api-cities only. */
+async function apiGet(request) {
+  try {
+    const response = await fetch(request, { redirect: "manual", cache: "no-store" });
+    if (response.status === 200 || response.status === 304) {
+      return response;
+    }
+    if (badNetworkResponse(response)) {
+      const offline = await caches.open("pinkeepr-api-cities");
+      const hit = await offline.match(request);
+      if (hit) return hit;
+    }
+    return response;
+  } catch (e) {
+    const offline = await caches.open("pinkeepr-api-cities");
+    const hit = await offline.match(request);
+    if (hit) return hit;
+    return new Response(JSON.stringify({ error: "offline" }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
 async function cacheFirst(request) {
   const cache = await caches.open(CACHE);
   const cached = await cache.match(request);
@@ -136,9 +164,18 @@ self.addEventListener("message", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-  if (request.method !== "GET") return;
+  if (request.method !== "GET") {
+    if (request.url.includes("/api/")) return;
+    return;
+  }
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith("/api/") && request.method !== "GET") return;
+
+  if (isApiRead(url, request)) {
+    event.respondWith(apiGet(request));
+    return;
+  }
 
   if (isCacheFirstPath(url) && !shouldUseNetwork(url, request)) {
     event.respondWith(cacheFirst(request));
@@ -173,7 +210,12 @@ export function collectDistUrls(distDir) {
 
 export function writeServiceWorker(distDir, extraUrls = []) {
   const manifest = [...new Set([...collectDistUrls(distDir), ...extraUrls])].sort();
-  const version = crypto.createHash("sha256").update(manifest.join("\n")).digest("hex").slice(0, 16);
+  const version = crypto
+    .createHash("sha256")
+    .update(manifest.join("\n"))
+    .update(SW_SOURCE)
+    .digest("hex")
+    .slice(0, 16);
   const final = SW_SOURCE.replace("__VERSION__", JSON.stringify(version)).replace(
     "__PRECACHE__",
     JSON.stringify(manifest),

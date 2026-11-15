@@ -61,6 +61,75 @@ Import or mirror from GitHub: **New project → Import repository → URL** `htt
 
 **Do not** copy `mauzon/amtravel` or any private upstream; only `mauzon/pinkeepr`.
 
+**Fork updates:** If `git pull` / merge from `mauzon/pinkeepr` fails with unrelated histories, use `git fetch upstream && git merge upstream/main --allow-unrelated-histories` (or re-clone and copy `data/cities/*.json` + `config.json`). See README **Updating your fork** and `CHANGELOG.md`.
+
+---
+
+## Storage: JSON (default) vs D1 + API (opt-in)
+
+| Mode | `config.json` | Build | Deploy | Trip edits |
+|------|----------------|-------|--------|------------|
+| **JSON (default)** | omit `storage` or `"storage": "json"` | `npm run build` | Any static host; `wrangler.jsonc` assets-only | Edit `data/cities/*.json` (or scripts); commit + push |
+| **D1** | `"storage": "d1"` | `STORAGE=d1 npm run build` or `npm run build:d1` | `wrangler deploy -c wrangler.d1.jsonc` (from `wrangler.d1.example.jsonc`) | **API only** — no on-site add-place form |
+
+**Default fork workflow stays JSON.** Do not enable D1 unless the user asks for Worker + database. No Wrangler secrets or agent tokens are required for JSON mode.
+
+Implementation: `shared/place-store.ts` (`JsonPlaceStore` / `D1PlaceStore`). Client uses bundled JSON as fallback and stale-while-revalidate when the API is available (`src/city-loader.ts`, `src/city-cache.ts`). The service worker **never** caches `/api` GETs.
+
+**Switching modes without losing data**
+
+```bash
+npm run d1:export          # D1 → data/cities/*.json (backup)
+npm run d1:seed            # data/cities/*.json → D1 (after migrations)
+```
+
+Full deploy: **[DEPLOY-D1.md](DEPLOY-D1.md)**.
+
+### Agent write auth (D1 only)
+
+**Never ask the human to invent API tokens by hand.**
+
+1. Run `npm run agent-token -- <your-agent-name>` (you generate the token).
+2. Store the **plaintext token once** in secure agent storage — not in git, chat, or issues.
+3. Commit only the SHA-256 hash in `AGENT_TOKEN_HASHES` inside `wrangler.d1.jsonc`.
+4. Use `Authorization: Bearer <token>` on API reads and writes.
+
+Owner may also write via **Cloudflare Access JWT** when `ACCESS_TEAM_DOMAIN` and `ACCESS_AUD` are set in `wrangler.d1.jsonc` and their email is in `WRITE_EMAILS`. Without a team domain, JWT auth is disabled and only agent tokens apply. The owner should configure Access **Bypass** for `/api/*` on browser deployments so fetch is not redirected; the Worker enforces auth. See DEPLOY-D1.md.
+
+Forks may set `API_PUBLIC_READS=true` for anonymous GETs; default is authenticated reads.
+
+### API writes (D1 mode)
+
+Base URL: user’s Worker origin. `Content-Type: application/json`. Bearer on all `/api/*` unless `API_PUBLIC_READS=true` for GETs.
+
+**Add place** — `POST /api/cities/:slug/places`:
+
+```bash
+curl -sS -X POST "https://<host>/api/cities/london/places" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $PINKEEPR_AGENT_TOKEN" \
+  -d '{
+    "name": "Example Cafe",
+    "name_ru": "Пример",
+    "name_en": "Example Cafe",
+    "category": "cafe",
+    "maps_url": "https://www.google.com/maps/search/?api=1&query=example",
+    "lat": 51.5074,
+    "lng": -0.1278,
+    "source": "added"
+  }'
+```
+
+**Patch** — `PATCH /api/places/:id` (partial body; same Bearer).
+
+**Origins** — `POST` / `PUT /api/cities/:slug/origins` or `…/origin` with `id`, `label_en`, `label_ru`, `kind`, `lat`, `lng`, optional `default`, `google_maps_url`.
+
+**Soft delete** — `DELETE /api/places/:id` → `{ "id", "deleted": true, "version" }`.
+
+Errors: `400` validation, `401`/`403` auth. Do not expose stack traces.
+
+In **JSON mode**, keep using `remove-place`, direct JSON edits, merge scripts, and git push — not the API.
+
 ---
 
 ## Phase 2 — Choose a host and deploy
@@ -69,7 +138,7 @@ Import or mirror from GitHub: **New project → Import repository → URL** `htt
 
 | Provider | Best when | Output | Start / serve |
 |----------|-----------|--------|----------------|
-| **Cloudflare Workers** | User already on Cloudflare, wants Access | `dist/` via `wrangler.jsonc` | Workers static assets |
+| **Cloudflare Workers** | User already on Cloudflare, wants Access | `dist/` via `wrangler.jsonc` (JSON) or `wrangler.d1.jsonc` (D1) | Static assets and/or Worker + D1 |
 | **Vercel** | Simple Git deploy, preview URLs | `dist/` (`vercel.json`) | Platform CDN |
 | **Railway** | Node `serve` on `$PORT` | `dist/` | `npm start` after build |
 | **Netlify** | Static + optional password | `dist/` (`netlify.toml`) | Platform CDN |
@@ -367,7 +436,11 @@ Always: read `.travel/instance.json` → perform steps → update `updatedAt` �
 | `npm run demo -- <id\|url>` | Load data pack |
 | `npm run demo -- remove <id>` / `clear` | Unload |
 | `npm run validate` | City + pack + instance schema; https URL checks |
-| `npm run build` | Static site to `dist/` (+ `dist/_headers`) |
+| `npm run build` | Static site to `dist/` (+ `dist/_headers`); respects `storage` in `config.json` |
+| `npm run build:d1` | Same with `storage: d1` embedded for Worker previews |
+| `npm run test:d1` | Local D1 seed, API auth, static-without-D1 checks |
+| `npm run d1:seed` / `d1:export` | JSON ↔ D1 migration |
+| `npm run agent-token` | Generate agent API token + hash for `AGENT_TOKEN_HASHES` |
 | `npm run test:browser` | Playwright smoke + offline PWA check |
 | `npm run test:offline` | Playwright: SW precache, reload offline, place cards visible |
 | `npm run audit:security` | Security/privacy report in `reports/` |

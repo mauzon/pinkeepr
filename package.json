@@ -13,6 +13,13 @@
   "scripts": {
     "validate": "node scripts/validate.mjs",
     "build": "node build.mjs",
+    "build:d1": "STORAGE=d1 node build.mjs",
+    "build:preview": "STORAGE=d1 node build.mjs",
+    "test:d1": "node scripts/test-d1-prep.mjs && node --import tsx scripts/d1-roundtrip.test.mjs && node --import tsx tests/d1-api.test.mjs && node --import tsx tests/agent-auth.test.mjs && node --import tsx tests/static-no-d1.test.mjs && node --import tsx tests/api-read-auth.test.mjs",
+    "agent-token": "node scripts/agent-token.mjs",
+    "d1:seed": "node --import tsx scripts/d1-seed.mjs",
+    "d1:export": "node --import tsx scripts/d1-export.mjs",
+    "d1:seed-sql": "node scripts/generate-seed-sql.mjs",
     "test:browser": "node scripts/browser-check.mjs",
     "test:offline": "node scripts/offline-check.mjs --prepare",
     "sync-list": "node scripts/sync-list.mjs --all",
@@ -37,7 +44,8 @@
   "dependencies": {
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "serve": "^14.2.8"
+    "serve": "^14.2.8",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",
@@ -46,6 +54,7 @@
     "ajv-formats": "^3.0.1",
     "esbuild": "^0.25.0",
     "playwright": "^1.51.0",
+    "tsx": "^4.23.15",
     "typescript": "^5.8.2",
     "wrangler": "^4.0.0"
   }

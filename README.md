@@ -193,6 +193,39 @@ Usually **nothing**, for a personal trip site.
 
 ---
 
+## Updating your fork
+
+If you forked pinkeepr a while ago, you can still pull in new template features (for example optional database storage) without starting over.
+
+**Nothing is required** if your site already works the way you like. New releases are designed so the default stays “trip data in JSON files, static hosting” — no extra setup.
+
+When you *do* want updates from the original template:
+
+1. **Ask your agent** (or follow the steps below) to sync with `https://github.com/mauzon/pinkeepr`.
+2. Because history on `main` was **squashed into one starting commit**, Git may say the histories are “unrelated”. That is normal for older forks.
+
+**Simple path (recommended):** ask the agent to merge upstream:
+
+```text
+Update my pinkeepr fork from https://github.com/mauzon/pinkeepr main. If Git reports unrelated histories, use --allow-unrelated-histories and keep my trip data in data/cities/ and config.json.
+```
+
+**If you use git yourself** (technical):
+
+```bash
+git remote add upstream https://github.com/mauzon/pinkeepr.git   # once
+git fetch upstream
+git merge upstream/main --allow-unrelated-histories
+```
+
+Resolve any conflicts in `config.json` or your city files, then run `npm run validate && npm run build` and redeploy.
+
+**Alternative:** clone a fresh copy of pinkeepr, copy your `data/cities/*.json` and `config.json` across, and point your host at the new repo.
+
+What’s new is listed in **[CHANGELOG.md](CHANGELOG.md)**. Optional Cloudflare D1 + API is documented in **[DEPLOY-D1.md](DEPLOY-D1.md)** — only if you want live writes through an API instead of editing JSON in git.
+
+---
+
 ## For developers
 
 The full agent runbook (fork → deploy → domain → access → data → maintenance) is in **[AGENTS.md](AGENTS.md)**. It's the single source of truth, and the agent follows it.
@@ -220,7 +253,7 @@ npm run test:browser  # optional Playwright smoke test
 
 A fresh clone has no trip data and builds an empty landing page until a pack or city is loaded.
 
-**Deploy:** Node 22, build `npm ci && npm run build`, output `dist/`. The configs are already in the repo: `wrangler.jsonc` (Cloudflare Workers), `vercel.json`, `netlify.toml`, `railway.json` + `serve.json` (Railway, `npm start`).
+**Deploy:** Node 22, build `npm ci && npm run build`, output `dist/`. The configs are already in the repo: `wrangler.jsonc` (Cloudflare Workers static assets), `vercel.json`, `netlify.toml`, `railway.json` + `serve.json` (Railway, `npm start`). Optional D1 + Worker API: `wrangler.d1.example.jsonc` and [DEPLOY-D1.md](DEPLOY-D1.md).
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/mauzon/pinkeepr)
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/github)
@@ -229,7 +262,7 @@ A fresh clone has no trip data and builds an empty landing page until a pack or 
 
 | Path | What it is |
 |---|---|
-| `config.json` | Site title, language, city list, `googleList` (main Google Maps list) |
+| `config.json` | Site title, language, city list, `googleList`, optional `storage` (`json` default, or `d1`) |
 | `data/cities/<slug>.json` | One city: origins, places, events, routes |
 | `data/schema/` | JSON Schemas (city, pack, instance) |
 | `demo/` | Demo packs (`london`, `example`), see [`demo/README.md`](demo/README.md) |

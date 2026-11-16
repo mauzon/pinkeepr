@@ -1,8 +1,8 @@
 # PinKeepr
 
-**Your own private trip page that works great on a phone.**
+**Your saved places on one page. See what's near, wherever you stay.**
 
-Put the places you want to see, where you want to eat, and the events you're going to on one page. For every place you see how far it is and how long it takes to get there from your starting point: a hotel, a friend's flat, an Airbnb, a train station during a layover, whatever you like. You can have several. Light or dark mode, English or Russian.
+Your AI agent builds a trip page from your saved places and keeps it up to date as things change. A new base, a café you just found, a concert venue: say so, and the list re-sorts by travel time. Free to use, and the page is yours.
 
 👉 **[Live demo: demotrip.25h.me](https://demotrip.25h.me/)**, a public instance of this template with made-up London data · About the project: [pinkeepr.25h.me](https://pinkeepr.25h.me/)
 
@@ -12,9 +12,19 @@ Put the places you want to see, where you want to eat, and the events you're goi
 
 ---
 
+## What's on the page
+
+- **Places.** Food, cafes, sights, parks, markets and more, each with a Google Maps link and your own note.
+- **Travel times.** Walking, taxi and public transport from your starting point, so the list sorts by what is actually near.
+- **Starting points.** A hotel, a friend's flat, an Airbnb, a station with a few hours between trains. A trip can have several, and the page switches between them.
+- **Events.** Concerts, bookings and anything with a date, listed next to the places.
+- **Made for a phone.** Light and dark theme, search and filters, works offline. Can be limited to people you list by email.
+
+---
+
 ## You don't need to be technical
 
-You won't install anything, write code, or edit files. An **AI agent** (Claude Code, Codex, Grok, Hermes, or similar) does all of that for you. You just tell it what you want, in plain words.
+You won't install anything, write code, or edit files. **Your AI agent** (Claude Code, Codex, Cursor, or similar) does all of that for you. You just tell it what you want, in plain words.
 
 ### Step 1. Give your agent this message
 
@@ -39,18 +49,26 @@ The agent will ask you to:
 
 You get a link to your page. From then on, just tell the agent what to change. See the examples below.
 
-### Why it's easier than chats and saved pins
+---
 
-The agent that set up your site keeps looking after it. To change something, you just talk to it, the way you'd talk to a friend helping you plan:
+## How it fits with the tools you already use
 
-> *"We're staying at Anna's place instead of the hotel. Measure everything from there."*
-> *"Drop the museums, we won't have time. Add a couple of breakfast spots near the station."*
+It doesn't replace Google Maps or the agent. Google Maps stays the source of places, the agent does the research and the edits, and the page is where the result ends up.
 
-- **No digging through old chats.** You don't have to scroll back to find what you decided about a place, and when. The site itself is the up-to-date answer, and everyone you share it with sees the same thing.
-- **No hunting on the map.** You don't have to look up again where exactly your hotel or meeting point is. It's saved, and every distance is already measured from it.
-- **Change your mind anytime.** You talk it through with the agent, it updates the page, and the page stays tidy.
+| | Saved list in Google Maps | Research in an agent chat | **PinKeepr page** |
+|---|---|---|---|
+| Where your places live | Pins and short notes | Spread across long chat threads | **One page that is always up to date** |
+| Distance from your starting points | One route at a time | Only if you ask, per answer | **Ready for every place, from each starting point** |
+| Structure | Flat list | Free text | **Categories, events, filters, search** |
+| A week later | Still there, no context | Find the right chat and scroll | **Open the link; a new agent chat picks up from saved state** |
+| Showing it to someone | Share the list | Screenshots or copied text | **Send a link, optionally email-gated** |
 
-> **Coming back later?** Start a new chat and say: *"This is my travel site repo: `<link to your copy>`. Read `.travel/instance.json` and continue."* The agent will pick up where you left off.
+Things you can say to your agent:
+
+> *"We're staying at a friend's flat now, measure from there."*
+> *"We have five hours at Oriente station on the way back. Add it as a second starting point."*
+> *"Drop the museums. Add two breakfast places near the station."*
+> *"Sync my Google Maps list again."*
 
 ---
 
@@ -159,7 +177,7 @@ You don't even need a link. A name or an address is enough, and the agent will f
 
 ## What else you can ask the agent
 
-Write in normal sentences. English or Russian is fine.
+Write in normal sentences.
 
 | You say | What happens |
 |---|---|
@@ -184,12 +202,48 @@ There's no "favourite" or "visited" button. Just ask the agent to add a note lik
 
 ## How much it costs
 
-Usually **nothing**, for a personal trip site.
+Usually **nothing**, for a personal trip site. The only thing you pay for is the AI agent you already use.
 
-- **GitHub:** free, including private projects.
-- **Hosting:** the free plans at Cloudflare, Netlify, and Vercel are plenty. Railway gives you trial credit.
+- **This project:** free and open source (MIT), no subscription.
+- **GitHub:** free, including private repositories.
+- **Hosting:** the free plans at Cloudflare, Netlify and Vercel are enough for a personal trip site. Railway gives you trial credit.
 - **Email login:** Cloudflare Access is free for a small group of people.
-- **This project:** free, no subscription.
+
+## Limits
+
+- **No live co-editing.** Changes go through the repository, so two people editing at once may need their agents to sort out a conflict.
+- **Not instant.** Edits go through a commit and a rebuild, so they show up after a minute or two.
+- **No turn-by-turn navigation.** Each place opens in Google Maps.
+- **You need** a GitHub account, a hosting account and access to an AI agent.
+
+## Questions
+
+**Do I need to know how to code?**
+No. Your AI agent does the setup and every later change. You only sign in to GitHub and to a hosting service when it asks, and tell it what you want in plain words.
+
+**Which AI agents work with it?**
+Any agent that can work with a GitHub repository and run commands: Claude Code, Codex, Cursor and similar. The repository includes a runbook ([AGENTS.md](AGENTS.md)) the agent follows, so you don't have to explain the steps.
+
+**Is it really free?**
+The template is free and open source. GitHub and the free plans of Cloudflare, Vercel or Netlify are enough for a personal trip page. The only thing you pay for is the AI agent you already use.
+
+**Who can see my page?**
+Your choice. Anyone with the link, or only people whose email you list: they get a one-time login code. Your trip data stays in your own private repository.
+
+**Do I need a Google Maps list?**
+No. A shared list is the quickest start, but you can also send single Google Maps links, or just names and addresses, and the agent adds them.
+
+**Can I have more than one starting point?**
+Yes. A hotel, a friend's flat, a station during a layover, a concert venue. Add as many as you need and switch between them on the page; distances are recalculated for each.
+
+**How accurate are the travel times?**
+They are estimates: walking and driving times come from OpenStreetMap routing, taxi prices are approximate, and public transport is filled in where data is available. Each place has a Google Maps link for live directions.
+
+**Does it work without internet?**
+Once opened, the page keeps working offline: places, filters and notes are there. Google Maps links need a connection.
+
+**Can several people edit it?**
+Yes. Add them as collaborators to your GitHub repository. Their AI agents read the same runbook and saved setup, so anyone on the trip can ask their own agent for changes. Everyone else just opens the link.
 
 ---
 
